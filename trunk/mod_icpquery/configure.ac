@@ -3,7 +3,8 @@ dnl Process this file with autoconf to produce a configure script.
 dnl Copyright 2008 Jacob Rief
 
 AC_INIT(mod_icpquery)
-VERSION="`cat VERSION`.`svnversion`"
+VERSION="`cat VERSION`"
+REVISION="${VERSION}-`svnversion`"
 OUTPUT_TARGET="Makefile defaults.h mod_icpquery.spec"
 
 AC_ARG_WITH(apxs, AC_HELP_STRING([--with-apxs=NAME],
@@ -43,6 +44,7 @@ APMODULENAME="${ICPQUERYNAME}_module"
 SOMODULENAME="mod_${ICPQUERYNAME}"
 
 AC_SUBST(APXS)
+AC_SUBST(REVISION)
 AC_SUBST(VERSION)
 AC_SUBST(ICPQUERYPORT)
 AC_SUBST(ICPQUERYMAPPER)
@@ -93,7 +95,7 @@ Configuration for Apache RewriteMap internal function extensions
 ------------------------
 Apache module name:                        ${APMODULENAME}
 Shared object name:                        ${SOMODULENAME}.so
-Version:                                   ${VERSION}
+Revision:                                  ${REVISION}
 ICP query port:                            ${ICPQUERYPORT}
 Function name of ICP query mapper:         ${ICPQUERYMAPPER} 
 Function name to check for running caches: ${CHECKCACHEMAPPER} 
