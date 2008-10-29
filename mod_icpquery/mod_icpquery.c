@@ -360,7 +360,7 @@ char* icp_check_cache(request_rec *req, char *key)
 		return NULL;
 	}
 	// extract the location for the table of running caches using the req->notes field
-	apr_table_t* running_caches = (apr_table_t*)apr_strtoi64(rc, NULL, 16);
+	apr_table_t* running_caches = (apr_table_t*)(unsigned int)apr_strtoi64(rc, NULL, 16);
 	if (apr_table_get(running_caches, key)) {
 		do_log(sconf, 1, 0, "Checked cache '%s' up and running", key);
 		return key;
@@ -454,12 +454,12 @@ int open_logfile(server_rec *s, apr_pool_t *pool)
 }
 
 static
-int pre_config(apr_pool_t *pool, apr_pool_t *plog, apr_pool_t *ptemp, server_rec *s)
+int pre_config(apr_pool_t *pool, apr_pool_t *plog, apr_pool_t *ptemp)
 {
 	APR_OPTIONAL_FN_TYPE(ap_register_rewrite_mapfunc) *map_pfn_register;
 	map_pfn_register = APR_RETRIEVE_OPTIONAL_FN(ap_register_rewrite_mapfunc);
 	if (map_pfn_register==NULL) {
-		ap_log_error(APLOG_MARK, APLOG_CRIT, 0, s, "mod_icpquery: could not initialize module");
+		ap_log_error(APLOG_MARK, APLOG_CRIT, 0, 0, "mod_icpquery: could not initialize module");
 		return HTTP_INTERNAL_SERVER_ERROR;
 	}
 	map_pfn_register(ICPQUERYMAPPER, icp_query_map);
