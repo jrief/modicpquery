@@ -1,0 +1,53 @@
+Name: mod_icpquery
+Version: @VERSION@
+Release: 1
+License: Apache Public License
+Group: System Environment/Daemons
+Source: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRequires: apr-devel, httpd-devel
+Requires: httpd
+Summary: Extend Apache's mod_rewrite by internal mapping functions using ICP.
+
+%description
+Apache mod_rewrite provides ways to map values to attributes using the
+directive RewriteMap. RewriteMap can use flat mappings files, hashed
+mapping files, internal functions and external rewriting programs.
+One not well known feature of mod_rewrite is to extend this functionality
+with internal functions, which can be defined in a seperate Apache module.
+This allows to do some complex and time consuming mappings, since 
+mapping requests do not have to be passed through one single pipe, as
+in the case of an external rewrite program.
+
+mod_icpquery is a package which can be used to find objects on caching
+servers by sending an UDP query. This query conforms to RFC2186 also
+known as ICP and can be handeld by various HTTP-caching servers such
+as squid. A cache-server handling ICP should reply to an ICP-query
+with an ICP-response indicating if it holds the desired object in its
+cache or not.
+mod_icpquery is able to send UDP datagrams to a list of unicast and/or
+multicast IP-addresses.
+
+%prep
+
+%setup -n %{name}
+
+%build
+%configure 
+make
+
+%install
+[ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
+make DESTDIR=$RPM_BUILD_ROOT install
+
+%clean
+[ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
+
+%files
+%defattr(-,root,root)
+%{_libdir}/httpd/modules
+
+%changelog
+* Sun Oct 05 2008 Jacob Rief <jacob.rief@gmail.com>
+- initial revision of mod_icpquery.
+
