@@ -8,7 +8,7 @@
 
 # define APMODULE		@APMODULENAME@
 
-# define VERSION		"@VERSION@"
+# define REVISION		"@REVISION@"
 
 # define ICPQUERYPORT		@ICPQUERYPORT@
 
