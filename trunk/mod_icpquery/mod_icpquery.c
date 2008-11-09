@@ -72,7 +72,7 @@ typedef struct icp_message_t {
 	unsigned int options;
 	unsigned int data;
 	unsigned int sender;
-	char payload[1024];
+	char payload[0];
 } icp_message_t;
 
 // mutex to exclude concurrent wrinting into the logfile
@@ -239,23 +239,20 @@ static
 int receive_icp_datagrams(request_rec *req, apr_uint32_t unicast_request_no, char* value)
 {
 	apr_status_t rv;
-	apr_int32_t nsds;
 	apr_int32_t multicast_request_no = unicast_request_no+1;
 	int writelen = 0;
 	int num_hits = 0;
-	char key[20];
 	char buffer[MAXBUFLEN];
 	apr_size_t bufsize = MAXBUFLEN-1;
-	apr_sockaddr_t* recfrom;
-	char* fromaddr;
 
 	// initialize lookup table to remember which caches have sent a valid ICP-reply 
 	apr_table_t *running_caches = apr_table_make(req->pool, 0);
-	apr_snprintf(key, sizeof(key), "%x", (unsigned int)running_caches);
+	apr_snprintf(buffer, MAXBUFLEN-1, "%x", (unsigned int)running_caches);
 
 	// remember table running_caches, dump address as hex-string into req->notes
-	apr_table_set(req->notes, "Running-Caches", key);
+	apr_table_set(req->notes, "Running-Caches", buffer);
 
+	apr_sockaddr_t* recfrom;
 	icpquery_config* sconf = ap_get_module_config(req->server->module_config, &APMODULE);
 	if ((rv = apr_sockaddr_info_get(&recfrom, APR_ANYADDR, APR_INET, 0, 0, req->pool))!=APR_SUCCESS) {
 		do_log(sconf, 0, rv, "Error while setting recfrom");
@@ -271,6 +268,7 @@ int receive_icp_datagrams(request_rec *req, apr_uint32_t unicast_request_no, cha
 	while (timeout>0) {
 		// wait for UDP datagram to arrive
 		do_log(sconf, 3, 0, "Listening for datagrams for max %u microseconds", timeout);
+		apr_int32_t nsds;
 		if ((rv = apr_poll(&pollfd, 1, &nsds, timeout))==APR_TIMEUP)
 			break;
 		if (rv!=APR_SUCCESS) {
@@ -281,7 +279,9 @@ int receive_icp_datagrams(request_rec *req, apr_uint32_t unicast_request_no, cha
 			do_log(sconf, 0, rv, "Error while receiving ICP datagram");
 			return 0;
 		}
+
 		// read ICP datagram and compare it to sent data
+		char* fromaddr;
 		icp->version = ntohl(icp->version);
 		icp->request = ntohl(icp->request);
 		apr_sockaddr_ip_get(&fromaddr, recfrom);
@@ -295,13 +295,17 @@ int receive_icp_datagrams(request_rec *req, apr_uint32_t unicast_request_no, cha
 		do_log(sconf, 2, 0, "Valid ICP-reply contains %s from %s", pstrdup_opcode(icp->opcode, req->pool), fromaddr);
 		if (icp->opcode==ICP_OP_HIT) {
 			num_hits++;
-			writelen += apr_snprintf(value+writelen, LONG_STRING_LEN-writelen, "%s;", fromaddr);
+			if (writelen<LONG_STRING_LEN)
+				writelen += apr_snprintf(value+writelen, LONG_STRING_LEN-writelen, "%s;", fromaddr);
 		}
-		// also remember caches sending ICP_MISS, so that cacheisrunning can tell
-		// the client about working caches.
-		apr_snprintf(key, 20, "%s", fromaddr);
-		apr_table_set(running_caches, key, "ok");
-		do_log(sconf, 3, 0, "Mark cache[%s] as running", key);
+		if (icp->opcode==ICP_OP_MISS) {
+			// also remember caches sending ICP_MISS, so that cacheisrunning can tell
+			// the client about working caches.
+			char key[64];
+			apr_snprintf(key, 64, "%s", fromaddr);
+			apr_table_set(running_caches, key, "ok");
+			do_log(sconf, 3, 0, "Mark cache[%s] as running", key);
+		}
 		if (icp->request==unicast_request_no) {
 			// in case the query was done exclusively with ICP-unicast 
 			// and each cache answered the query, then leave the loop immediately.
@@ -592,7 +596,7 @@ const char *cmd_mcastaddr(cmd_parms *cmd, void *dconf, const char *mcastaddr)
 	char* scope_id;
 	apr_port_t port;
 	apr_status_t rv = apr_parse_addr_port(&baseaddr, &scope_id, &port, mcastaddr, cmd->pool);
-	if (rv!=APR_SUCCESS || baseaddr==NULL || port==0)
+	if (rv!=APR_SUCCESS || baseaddr==NULL)
 		return apr_psprintf(cmd->pool, "Can't parse %s", mcastaddr);
 	if (port==0) port = ICPQUERYPORT;
 	apr_sockaddr_t* icp_mcastaddr;
