@@ -6,6 +6,7 @@
 // License: Apache Public License
 
 #include "defaults.h"
+#include "apr_ext.h"
 
 #include "httpd.h"
 #include "http_config.h"
@@ -211,12 +212,14 @@ int send_icp_datagrams(request_rec *req, char* key, apr_uint32_t request_no)
 	length += 24;
 	icp->length = htons(length);
 	// send the datagram to the list of unicast addresses
-	apr_sockaddr_t** peers = (apr_sockaddr_t**)sconf->icp_peer_addrs->elts;
+	
+	apr_sockaddr_t** peers = (apr_sockaddr_t**)(apr_array_shuffle_ext(req->pool, sconf->icp_peer_addrs)->elts);
 	int i;
 	for (i = 0; i<sconf->icp_peer_addrs->nelts; ++i) {
 		apr_sockaddr_t* p = peers[i];
 		apr_sockaddr_ip_get(&toaddr, p);
-		do_log(sconf, 3, 0, "Sending ICP query='%s' to %s:%d [req=%u] as unicast", key, toaddr, p->port, request_no);
+		do_log(sconf, 3, 0, "Sending ICP query='%s' to %s:%d [req=%u] as unicast",
+		    key, toaddr, p->port, request_no);
 		if ((rv = apr_socket_sendto(sconf->icp_socket, p, 0, buffer, &length))!=APR_SUCCESS)
 			do_log(sconf, 0, rv, "Error while sending ICP datagram: %d");
 	}
@@ -228,7 +231,8 @@ int send_icp_datagrams(request_rec *req, char* key, apr_uint32_t request_no)
 	for (i = 0; i<sconf->icp_mcast_addrs->nelts; ++i) {
 		apr_sockaddr_t* p = peers[i];
 		apr_sockaddr_ip_get(&toaddr, p);
-		do_log(sconf, 3, 0, "Sending ICP query='%s' to %s:%d [req=%u] as multicast", key, toaddr, p->port, request_no);
+		do_log(sconf, 3, 0, "Sending ICP query='%s' to %s:%d [req=%u] as multicast",
+		    key, toaddr, p->port, request_no);
 		if ((rv = apr_socket_sendto(sconf->icp_socket, p, 0, buffer, &length))!=APR_SUCCESS)
 			do_log(sconf, 0, rv, "Error while sending ICP datagram: %d");
 	}
@@ -298,7 +302,7 @@ int receive_icp_datagrams(request_rec *req, apr_uint32_t unicast_request_no, cha
 			if (writelen<LONG_STRING_LEN)
 				writelen += apr_snprintf(value+writelen, LONG_STRING_LEN-writelen, "%s;", fromaddr);
 		}
-		if (icp->opcode==ICP_OP_MISS) {
+		if (icp->opcode==ICP_OP_HIT || icp->opcode==ICP_OP_MISS) {
 			// also remember caches sending ICP_MISS, so that cacheisrunning can tell
 			// the client about working caches.
 			char key[64];
@@ -360,7 +364,8 @@ char* icp_check_cache(request_rec *req, char *key)
 	}
 	const char* rc = apr_table_get(req->notes, "Running-Caches");
 	if (rc==NULL) {
-		do_log(sconf, 0, 0, "req->notes does not contain any valid table information", key);
+		do_log(sconf, 0, 0, "There is no information about running caches. Did you invoke "
+		    ICPQUERYMAPPER" from your rewrite rules?");
 		return NULL;
 	}
 	// extract the location for the table of running caches using the req->notes field

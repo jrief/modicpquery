@@ -13,10 +13,11 @@
 #  limitations under the License.
 
 APXS = @APXS@
-
+APR=@APR@
 DESTDIR =
 LIBEXECDIR = @LIBEXECDIR@
 VERSION = @VERSION@
+CC = @CC@
 CPPFLAGS = @CPPFLAGS@
 CFLAGS = @CFLAGS@
 LDFLAGS = @LDFLAGS@
@@ -24,8 +25,8 @@ LDLIBS = @LDLIBS@
 
 all : @SOMODULENAME@.la
 
-@SOMODULENAME@.la : mod_icpquery.c
-	$(APXS) -c $(CPPFLAGS) $(CFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+@SOMODULENAME@.la : mod_icpquery.c apr_ext.c
+	$(APXS) -c $(CPPFLAGS) $(CFLAGS) $^ $(LDFLAGS) $(LDLIBS) -o $@
 
 $(DESTDIR)$(LIBEXECDIR) :
 	mkdir -p $@
@@ -49,4 +50,7 @@ realclean : distclean
 tar: distclean
 	cd ..; \
 	tar czf mod_icpquery-$(VERSION).tar.gz --exclude .svn mod_icpquery 
+
+test: test-apr.c apr_ext.c
+	$(CC) `pkg-config --cflags --libs $(APR)` -g $^ -o test-apr
 
