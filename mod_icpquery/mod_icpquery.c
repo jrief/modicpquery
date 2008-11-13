@@ -200,6 +200,7 @@ int send_icp_datagrams(request_rec *req, char* key, apr_uint32_t request_no)
 	char buffer[MAXBUFLEN];
 
 	icpquery_config *sconf = ap_get_module_config(req->server->module_config, &APMODULE);
+
 	// setup icp message to send as UDP datagram
 	apr_size_t length = strlen(key)+1;
 	if (length>MAXBUFLEN-32) length = MAXBUFLEN-32;
@@ -211,8 +212,8 @@ int send_icp_datagrams(request_rec *req, char* key, apr_uint32_t request_no)
 	icp->request = htonl(request_no);
 	length += 24;
 	icp->length = htons(length);
+
 	// send the datagram to the list of unicast addresses
-	
 	apr_sockaddr_t** peers = (apr_sockaddr_t**)(apr_array_shuffle_ext(req->pool, sconf->icp_peer_addrs)->elts);
 	int i;
 	for (i = 0; i<sconf->icp_peer_addrs->nelts; ++i) {
@@ -226,8 +227,9 @@ int send_icp_datagrams(request_rec *req, char* key, apr_uint32_t request_no)
 	// use a different request_no to distinguish unicast from multicast addresses
 	request_no++;
 	icp->request = htonl(request_no);
+
 	// send the datagram to the list of multicast address
-	peers = (apr_sockaddr_t**)sconf->icp_mcast_addrs->elts;
+	peers = (apr_sockaddr_t**)(apr_array_shuffle_ext(req->pool, sconf->icp_mcast_addrs)->elts)
 	for (i = 0; i<sconf->icp_mcast_addrs->nelts; ++i) {
 		apr_sockaddr_t* p = peers[i];
 		apr_sockaddr_ip_get(&toaddr, p);

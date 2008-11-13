@@ -20,7 +20,6 @@ void print_array(apr_array_header_t * array)
 
 int main(int argc, char** argv)
 {
-	srandom(time());
 	apr_initialize();
 	apr_pool_t * pool;
 	apr_pool_create(&pool, NULL);
