@@ -229,7 +229,7 @@ int send_icp_datagrams(request_rec *req, char* key, apr_uint32_t request_no)
 	icp->request = htonl(request_no);
 
 	// send the datagram to the list of multicast address
-	peers = (apr_sockaddr_t**)(apr_array_shuffle_ext(req->pool, sconf->icp_mcast_addrs)->elts)
+	peers = (apr_sockaddr_t**)(apr_array_shuffle_ext(req->pool, sconf->icp_mcast_addrs)->elts);
 	for (i = 0; i<sconf->icp_mcast_addrs->nelts; ++i) {
 		apr_sockaddr_t* p = peers[i];
 		apr_sockaddr_ip_get(&toaddr, p);
@@ -291,9 +291,10 @@ int receive_icp_datagrams(request_rec *req, apr_uint32_t unicast_request_no, cha
 		icp->version = ntohl(icp->version);
 		icp->request = ntohl(icp->request);
 		apr_sockaddr_ip_get(&fromaddr, recfrom);
-		do_log(sconf, 3, 0, "Recieved UDP datagram with %d bytes from %s:%d [req=%u]",
-		     bufsize, fromaddr, recfrom->port, icp->request);
-		timeout -= apr_time_now()-starttime;
+		apr_time_t timeiv = apr_time_now()-starttime;
+		timeout -= timeiv;
+		do_log(sconf, 2, 0, "Recieved UDP datagram with %d bytes from %s:%d after %u microseconds [req=%u]",
+		     bufsize, fromaddr, recfrom->port, timeiv, icp->request);
 		if (bufsize==0)
 			continue;
 		if (icp->request!=unicast_request_no && icp->request!=multicast_request_no)
