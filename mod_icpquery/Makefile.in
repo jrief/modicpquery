@@ -38,6 +38,7 @@ clean :
 	-rm -rf .libs
 	-rm -f @SOMODULENAME@.la 
 	-rm -f mod_icpquery.o mod_icpquery.lo mod_icpquery.slo mod_icpquery.loT
+	-rm -f apr_ext.o apr_ext.lo apr_ext.slo test-apr
 	-rm -f config.log config.status
 	-rm -rf autom4te.cache
 
