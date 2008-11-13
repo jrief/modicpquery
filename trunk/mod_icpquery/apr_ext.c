@@ -3,7 +3,8 @@
 #include <apr_want.h>
 #include <apr_tables.h>
 
-apr_array_header_t* apr_array_shuffle_ext(apr_pool_t * pool,  const apr_array_header_t * sorted)
+APR_DECLARE(apr_array_header_t *) 
+apr_array_shuffle_ext(apr_pool_t * pool,  const apr_array_header_t * sorted)
 {
 	apr_array_header_t* shuffled = apr_array_make(pool, sorted->nelts, sorted->elt_size);
 	int nelts = shuffled->nelts = sorted->nelts;

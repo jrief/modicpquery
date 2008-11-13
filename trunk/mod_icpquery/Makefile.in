@@ -13,11 +13,11 @@
 #  limitations under the License.
 
 APXS = @APXS@
-APR=@APR@
+APR=apr-1
 DESTDIR =
 LIBEXECDIR = @LIBEXECDIR@
 VERSION = @VERSION@
-CC = @CC@
+CC = $(shell $(APXS) -q CC)
 CPPFLAGS = @CPPFLAGS@
 CFLAGS = @CFLAGS@
 LDFLAGS = @LDFLAGS@
