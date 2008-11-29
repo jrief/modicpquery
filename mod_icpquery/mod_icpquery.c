@@ -516,7 +516,7 @@ int post_config(apr_pool_t *pool, apr_pool_t *plog, apr_pool_t *ptemp, server_re
 		if (!init_icpquery_socket(pool, si))
 			return HTTP_INTERNAL_SERVER_ERROR;
 	}
-	ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, "Initialized mod_icpquery (version="VERSION")");
+	ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, "Initialized mod_icpquery (version="VERSION" $Revision$)");
 	return OK;
 }
 

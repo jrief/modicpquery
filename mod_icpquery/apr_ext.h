@@ -8,5 +8,5 @@
  * @return An array of the same size with its elements shuffled randomly.
  **/
 extern APR_DECLARE(apr_array_header_t *)
-apr_array_shuffle_ext(apr_pool_t * pool,  const apr_array_header_t * sorted);
+apr_array_shuffle_ext(apr_pool_t * pool, apr_array_header_t * sorted);
 
