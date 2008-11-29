@@ -50,7 +50,7 @@ realclean : distclean
 
 tar: distclean
 	cd ..; \
-	tar czf mod_icpquery-$(VERSION).tar.gz --exclude .svn mod_icpquery 
+	tar czf mod_icpquery-$(VERSION).tar.gz --exclude .svn --exclude Makefile mod_icpquery 
 
 test: test-apr.c apr_ext.c
 	$(CC) `pkg-config --cflags --libs $(APR)` -g $^ -o test-apr
