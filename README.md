@@ -16,8 +16,13 @@ of unicast and/or multicast IP-addresses.
 
 ## Getting started
 Introduction and motivation for creating mod_icquery.
+
 Installation: How to build and install mod_icquery.
+
 Examples: Example setups for a typical usage of mod_icpquery.
+
 ConfigurationDirectives: The reference manual for mod_icpquery.
+
 MultipleInstantiation: In case you need the functionality for mod_icpquery more than once.
+
 Internals: For experts, knowing how to write Apache modules, which want to write their own mapping functionality, in order to extend mod_rewrite.
